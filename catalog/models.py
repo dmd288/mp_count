@@ -12,16 +12,16 @@ class Product(models.Model):
         return f"{self.article} {self.name} {self.size} {self.color}"
 
 class Warehouse(models.Model):
-    # Склады: производство, карго, ФФ Бишкек, ФФ Москва, WB и т.д.
+    # Тип склада/локации
     WAREHOUSE_TYPES = [
-        ('production', 'Производство'),
-        ('cargo', 'Карго'),
-        ('ff_bishkek', 'Фулфилмент Бишкек'),
-        ('ff_moscow', 'Фулфилмент Москва'),
-        ('wb', 'Склад WB'),
-        ('other', 'Другой'),
+        ('production', 'Производство'),        # цех, фабрика, пошив
+        ('ff', 'Фулфилмент'),                 # любой ФФ (Бишкек, Москва и т.д.)
+        ('cargo', 'Карго / Транзит'),         # склады карго, хабы
+        ('mp_warehouse', 'Склад маркетплейса'),  # склады WB/Ozon/YM
+        ('own', 'Собственный склад'),         # свои склады (если появятся)
+        ('other', 'Другое'),
     ]
-    name = models.CharField(max_length=200)                 # название склада
+    name = models.CharField(max_length=200)   # конкретное название: "ФФ Бишкек", "Карго Рад Экспресс"
     type = models.CharField(max_length=20, choices=WAREHOUSE_TYPES, default='other')
 
     def __str__(self):
