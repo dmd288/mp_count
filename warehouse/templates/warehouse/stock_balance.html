@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2487.5">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="ru"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;Остатки по складам&lt;/title&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body&gt;</p>
+<p class="p1">&lt;h1&gt;Остатки по складам&lt;/h1&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;form method="get"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Фильтр по артикулу --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>Артикул:</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;input type="text" name="article" value="{{ article }}"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/label&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;!-- Фильтр по складу --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;label&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>Склад:</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;select name="warehouse"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;option value=""&gt;Все&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{% for wh in warehouses %}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;option value="{{ wh.id }}"</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>{% if wh.id == selected_warehouse %}selected{% endif %}&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>{{ wh.name }}</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/option&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{% endfor %}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/select&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/label&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;button type="submit"&gt;Фильтровать&lt;/button&gt;</p>
+<p class="p1">&lt;/form&gt;</p>
+<p class="p2"><br></p>
+<p class="p1">&lt;table border="1" cellspacing="0" cellpadding="4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;thead&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;tr&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;th&gt;Артикул&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;th&gt;Наименование&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;th&gt;Размер&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;th&gt;Цвет&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;th&gt;Склад&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;th&gt;Остаток&lt;/th&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/tr&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/thead&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;tbody&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>{% for row in rows %}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;tr&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;td&gt;{{ row.article }}&lt;/td&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;td&gt;{{ row.name }}&lt;/td&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;td&gt;{{ row.size }}&lt;/td&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;td&gt;{{ row.color }}&lt;/td&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;td&gt;{{ row.warehouse_name }}&lt;/td&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;td&gt;{{ row.balance }}&lt;/td&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/tr&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>{% empty %}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;tr&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;td colspan="6"&gt;Нет остатков (по заданным фильтрам).&lt;/td&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/tr&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>{% endfor %}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/tbody&gt;</p>
+<p class="p1">&lt;/table&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>

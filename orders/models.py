@@ -1,17 +1,16 @@
 from django.db import models
 from catalog.models import Product, Counterparty, Warehouse
+from decimal import Decimal
 # Product, Counterparty, Warehouse — это наши справочники из приложения catalog
 
 
 class PurchaseOrder(models.Model):
     """
     Заказ поставщику (твой лист 'Заказ №1').
-    В шапке храним общую информацию по заказу.
     """
-    number = models.CharField(max_length=50, unique=True)  # номер заказа
-    date = models.DateField()                              # дата заказа
+    number = models.CharField(max_length=50, unique=True)
+    date = models.DateField()
 
-    # Фабрика / производство, выбираем только контрагентов типа 'factory'
     factory = models.ForeignKey(
         Counterparty,
         on_delete=models.PROTECT,
@@ -21,7 +20,7 @@ class PurchaseOrder(models.Model):
 
     currency = models.CharField(
         max_length=3,
-        default='RUB',                                     # сом/руб и т.п.
+        default='RUB',
         help_text="Код валюты, например RUB или KGS",
     )
 
@@ -31,7 +30,6 @@ class PurchaseOrder(models.Model):
         help_text="Статус заказa: draft / in_progress / closed",
     )
 
-    # Общая сумма заказа (можно не заполнять руками, а считать по строкам)
     total_amount_currency = models.DecimalField(
         max_digits=12, decimal_places=2, default=0,
         help_text="Сумма заказа в валюте (из строк заказа)",
@@ -45,7 +43,54 @@ class PurchaseOrder(models.Model):
         return f"Заказ {self.number} от {self.date}"
 
     class Meta:
-        ordering = ['-date']  # в списках сначала свежие заказы
+        ordering = ['-date']
+
+    # ==== Финансовые агрегаты по заказу ====
+
+    def get_paid_amount_currency(self):
+        """
+        Сколько всего оплачено по заказу в валюте заказа.
+        """
+        from finance.models import MoneyTransaction  # локальный импорт, чтобы избежать циклов
+
+        qs = MoneyTransaction.objects.filter(
+            order=self,
+            tran_type='expense',
+            currency=self.currency,
+        )
+        total = qs.aggregate(models.Sum('amount'))['amount__sum'] or 0
+        return total
+
+    def get_paid_amount_rub(self):
+        """
+        Оплачено в рублях (с учётом курса).
+        """
+        from finance.models import MoneyTransaction
+
+        qs = MoneyTransaction.objects.filter(
+            order=self,
+            tran_type='expense',
+        )
+        total = 0
+        for tx in qs:
+            if tx.currency == 'RUB':
+                total += tx.amount
+            else:
+                total += tx.amount * tx.exchange_rate
+        return total
+
+    def get_outstanding_amount_currency(self):
+        """
+        Осталось оплатить в валюте заказа.
+        """
+        return (self.total_amount_currency or 0) - (self.get_paid_amount_currency() or 0)
+
+    def get_outstanding_amount_rub(self):
+        """
+        Осталось оплатить в рублях.
+        """
+        return (self.total_amount_rub or 0) - (self.get_paid_amount_rub() or 0)
+
 
 
 class ProductBatch(models.Model):
@@ -53,6 +98,10 @@ class ProductBatch(models.Model):
     Партия товара внутри заказа: артикул + цвет + размер.
     Это соответствует строкам 'блузка ... S/M/L' в таблице.
     """
+
+    material_cost_total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal("0.00"))
+    material_cost_per_unit = models.DecimalField(max_digits=12, decimal_places=4, default=Decimal("0.0000"))
+
     order = models.ForeignKey(
         PurchaseOrder,
         on_delete=models.PROTECT,
@@ -146,3 +195,60 @@ class SupplyItem(models.Model):
 
     def __str__(self):
         return f"{self.supply} -> {self.warehouse_to} ({self.quantity})"
+
+
+
+
+    # ==== Финансовые агрегаты по заказу ====
+
+    def get_paid_amount_currency(self):
+        """
+        Сколько всего оплачено по заказу в валюте операции.
+        Берём все денежные операции, привязанные к этому заказу,
+        где тип = 'expense' (расход, то есть мы платим поставщику)
+        и валюта совпадает с валютой заказа.
+        """
+        from finance.models import MoneyTransaction  # локальный импорт, чтобы избежать циклов
+
+        qs = MoneyTransaction.objects.filter(
+            order=self,
+            tran_type='expense',
+            currency=self.currency,
+        )
+        total = qs.aggregate(models.Sum('amount'))['amount__sum'] or 0
+        return total
+
+    def get_paid_amount_rub(self):
+        """
+        Оплачено в рублях (с учётом курса).
+        Берём все операции по заказу типа 'expense' и пересчитываем в RUB.
+        """
+        from finance.models import MoneyTransaction
+
+        qs = MoneyTransaction.objects.filter(
+            order=self,
+            tran_type='expense',
+        )
+        # amount * exchange_rate (если валютная операция)
+        total = 0
+        for tx in qs:
+            if tx.currency == 'RUB':
+                total += tx.amount
+            else:
+                total += tx.amount * tx.exchange_rate
+        return total
+
+    def get_outstanding_amount_currency(self):
+        """
+        Осталось оплатить в валюте заказа:
+        сумма заказа в валюте - оплачено в валюте.
+        """
+        return (self.total_amount_currency or 0) - (self.get_paid_amount_currency() or 0)
+
+    def get_outstanding_amount_rub(self):
+        """
+        Осталось оплатить в рублях:
+        сумма заказа в рублях - оплачено в рублях.
+        """
+        return (self.total_amount_rub or 0) - (self.get_paid_amount_rub() or 0)
+

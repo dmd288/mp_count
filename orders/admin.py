@@ -5,16 +5,39 @@ from .models import PurchaseOrder, ProductBatch, PurchaseOrderItem, Supply, Supp
 @admin.register(PurchaseOrder)
 class PurchaseOrderAdmin(admin.ModelAdmin):
     """
-    Настройки отображения заказов в админке:
-    какие колонки видеть, по каким полям фильтровать.
+    Настройки отображения заказов в админке.
+    Здесь сразу показываем:
+    - общие суммы,
+    - сколько оплачено,
+    - сколько осталось оплатить.
     """
     list_display = (
         "number", "date", "factory", "currency", "status",
         "total_amount_currency", "total_amount_rub",
+        "paid_amount_currency", "paid_amount_rub",
+        "outstanding_amount_currency", "outstanding_amount_rub",
     )
     list_filter = ("status", "currency", "factory")
     search_fields = ("number",)
     date_hierarchy = "date"
+
+    # Эти методы берут значения из методов модели PurchaseOrder
+    def paid_amount_currency(self, obj):
+        return obj.get_paid_amount_currency()
+    paid_amount_currency.short_description = "Оплачено (валюта)"
+
+    def paid_amount_rub(self, obj):
+        return obj.get_paid_amount_rub()
+    paid_amount_rub.short_description = "Оплачено (руб)"
+
+    def outstanding_amount_currency(self, obj):
+        return obj.get_outstanding_amount_currency()
+    outstanding_amount_currency.short_description = "Остаток (валюта)"
+
+    def outstanding_amount_rub(self, obj):
+        return obj.get_outstanding_amount_rub()
+    outstanding_amount_rub.short_description = "Остаток (руб)"
+
 
 
 @admin.register(ProductBatch)
